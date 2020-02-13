@@ -4,13 +4,6 @@
 
 #include "connections.h"
 
-typedef enum _NetworkDebugLevel {
-	NW_NO_DISPLAY,
-	NW_NETWORK_ERRORS,
-	NW_ALL_DISPLAY
-} NetworkDebugLevel;
-NetworkDebugLevel NETWORK_DEBUG_LEVEL = NW_NO_DISPLAY;
-
 typedef enum _MessageType {
 	ABC,
 	GETATTR, // Obtiene los atributos de un archivo
