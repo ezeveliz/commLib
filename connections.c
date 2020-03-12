@@ -43,49 +43,17 @@ int connect_socket(int socket, char *IP, int port) {
     return 0;
 }
 
-//Really?
 int close_socket(int socket) {
     close(socket);
     return 0;
 }
 
-int send_data(int destination, MessageType type, int data_size, void *data_stream) {
-    MessageHeader *header = malloc(sizeof(MessageHeader));
-    int sent, header_sent, data_sent;
-
-    header->type = type;
-    header->data_size = data_size;
-
-    sent = send(destination, header, sizeof(MessageHeader), 0);
-    if (sent == -1) {
-        return sent;
-    }
-    if (data_size > 0) {
-        data_sent = send(destination, data_stream, data_size, 0);
-        if (data_sent == -1) {
-            return data_sent;
-        } else {
-            sent += data_sent;
-        }
-    }
-
-    return sent;
-}
-
-int receive_header(int source, MessageHeader *buffer) {
+int receive_header(int socket, MessageHeader *buffer) {
     int rec;
-    rec = recv(source, buffer, sizeof(MessageHeader), 0);
+    rec = recv(socket, buffer, sizeof(MessageHeader), 0);
     return rec;
 }
 
-int receive_data(int source, void *buffer, int data_size) {
-    int rec;
-    rec = recv(source, buffer, data_size, 0);
-    return rec;
-}
-
-//Funcion que va a correr el hilo del servidor cuando haya una nueva conexion
-//TODO: revisar si deberia tener algun valor de retorno o que
 void* server_client(void* _params){
 
     //casteo los parametros porque a pthread hay que pasarle un puntero a void
@@ -147,6 +115,7 @@ int start_multithread_server(int socket,
             getpeername(new_socket, (struct sockaddr *) &address, (socklen_t *) &addrlen);
 
             //Creo los parametros de la funcion que le voy a pasar al hilo
+            //TODO: ver donde esta esta estructura falopa
             t_thread_client *parametros_cliente = malloc(sizeof(t_thread_client));
 
             parametros_cliente->socket = new_socket;
@@ -247,8 +216,6 @@ int start_server(int socket,
     }
 }
 
-
-// Serializacion
 t_paquete * create_package(MessageType tipo) {
     t_paquete *paquete = malloc(sizeof(t_paquete));
     paquete->header = (MessageHeader *) malloc(sizeof(MessageHeader));

@@ -1,49 +1,35 @@
-#ifndef ALTALIBRERIA_STRUCTURES_H_
-#define ALTALIBRERIA_STRUCTURES_H_
+#ifndef COMMLIB_STRUCTURES_H_
+#define COMMLIB_STRUCTURES_H_
 #define IP_LENGTH 20
 
 #include "connections.h"
 
+/**
+ *  En este enum se agregan todos los distintos tipos de mensajes que se van a enviar entre los clientes y los
+ *  servidores, cada vez que se agregue un nuevo enum, se debera volver a compilar y reinstalar la biblioteca
+ */
 typedef enum _MessageType {
+    // Enum de prueba
 	ABC,
-	GETATTR, // Obtiene los atributos de un archivo
-	READLINK, // Lee un simbolic link
-	MKNOD, // Crea un archivo
-	MKDIR, // Crea un directorio
-	UNLINK, // Borrar un archivo
-	SYMLINK, // Crea un simbolic link
-	RENAME, // Cambia el nombre de un archivo
-	LINK, // Crea un hard link a un archivo
-	TRUNCATE, // Cambia el tamanio de un archivo
-	OPEN, //Abre un archivo
-	READ, // Lee la informacion de un archivo abierto
-	WRITE, // Escribe informacion en un archivo abierto
-	RELEASE, //INVESTIGAR SOBRE ESTO
-	OPENDIR, // Abrir un directorio
-	READDIR, // Leer un directorio
-	CREATE, // Crea y abre un archivo
-	UTIMENS, // Modifica el tiempo de modificacion de un archiv
-	COPY_FILE_RANGE, // Copia un rango de datos de un archivo a otro
-	SUSE_CREATE,
-	SUSE_SCHEDULE_NEXT,
-	SUSE_WAIT,
-	SUSE_SIGNAL,
-	SUSE_JOIN,
-	SUSE_CLOSE
-	//TODO: Agregar nuestros headers(tipos de mensajes a enviar)
 
 } MessageType;
 
+/**
+ *  Estructura que contiene el nombre del header de la comunicación y el tamaño del paquete en sí
+ */
 typedef struct _MessageHeader {
 	MessageType type;
 	int data_size;
 } MessageHeader;
 
-
+/**
+ *  Estructura que contiene a un MessageHeader y a un void*, esta es la estructura que luego se serializara y se
+ *  enviara por sockets
+ */
+ //TODO revisar si no se puede colocar todo directo en el paquete en vez de usar 2 estructuras
 typedef struct {
 	MessageHeader *header;
 	void* stream;
 } t_paquete;
 
-
-#endif /* ALTALIBRERIA_STRUCTURES_H_ */
+#endif

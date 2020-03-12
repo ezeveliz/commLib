@@ -1,5 +1,5 @@
-#ifndef ALTALIBRERIA_CONNECTIONS_H_
-#define ALTALIBRERIA_CONNECTIONS_H_
+#ifndef COMMLIB_CONNECTIONS_H_
+#define COMMLIB_CONNECTIONS_H_
 
 #define MAX_CONN 40
 #define null NULL
@@ -37,72 +37,56 @@ typedef struct t_thread_client {
 	char * client_ip;
 	int connection_port;
 	void (*lost_connection)(int, char*, int);
-	void (*incoming_message)(int, char*, int,MessageHeader*);
+	void (*incoming_message)(int, char*, int, MessageHeader*);
 }t_thread_client;
 
 /**
- *
- * @return
+ * Creo un socket
+ * @return -1 en caso de error, sino el socket en cuestion
  */
 int create_socket();
 
 /**
- *
- * @param socket
- * @param port
- * @return
+ * Uno un socket a un puerto del SERVIDOR para recibir/enviar mensajes por este
+ * @param socket, socket creado en la funcion create_socket
+ * @param port, puerto que quiero abrir en el servidor
+ * @return -1 en caso de error, 0 en caso contrario
  */
 int bind_socket(int socket, int port);
 
 /**
- *
- * @param socket
- * @param IP
- * @param port
- * @return
+ * Analoga del bind_socket pero para el CLIENTE, le asigno la ip de un servidor y el puerto en el que este escucha a
+ * un socket
+ * @param socket, socket creado en la funcion create_socket
+ * @param IP, IP sobre la que voy a enviar/recibir mensajes
+ * @param port, puerto sobre el que voy a enviar/ recibir mensajes
+ * @return -1 en caso de error, 0 en caso contrario
  */
 int connect_socket(int socket, char * IP, int port);
 
 /**
- *
- * @param socket
- * @return
+ * Esta funcion sirve para cerrar los sockets, siempre hacerlo ya que sino la direccion a la que esta conectado puede
+ * quedar bloqueada por unos minutos
+ * @param socket, socket a cerrar
+ * @return 0, creo que no puede fallar?
  */
 int close_socket(int socket);
 
 /**
- *
- * @param destination
- * @param type
- * @param data_size
- * @param data_stream
- * @return
+ * Recibo el header del paquete para saber de que tipo es y mandarlo a la funcion correspondiente
+ * @param socket, socket sobre el que voy a recibir el mensaje
+ * @param buffer, puntero a MessageHeader sobre el que voy a cargar el header recibido
+ * @return -1 hubo un error, 0 el servidor se desconecto, +0 cant de bytes recibidos
  */
-int send_data(int destination, MessageType type, int data_size, void * data_stream);
+int receive_header(int socket, MessageHeader * buffer);
 
 /**
- *
- * @param source
- * @param buffer
- * @return
- */
-int receive_header(int source, MessageHeader * buffer);
-
-/**
- *
- * @param source
- * @param buffer
- * @param data_size
- * @return
- */
-int receive_data(int source, void * buffer, int data_size);
-
-/**
- *
- * @param socket
- * @param new_connection
- * @param lost_connection
- * @param incoming_message
+ * Servidor creado utilizando select, recibe 3 funciones, las que se encargan de todos los tipos posibles de acciones
+ * @param socket, socket que abri
+ * @param new_connection, funcion que se ejecuta al recibir una nueva conexion
+ * @param lost_connection, funcion que se ejecuta al perder una conexion
+ * @param incoming_message, funcion que se ejecuta al recibir un mensaje nuevo, el grueso de la funcionalidad estara
+ * aca, ya que recibe el header del paquete y decide que hacer segun el tipo del mismo
  * @return
  */
 int start_server(int socket,
@@ -111,63 +95,70 @@ int start_server(int socket,
     void (*incoming_message)(int fd, char * ip, int port, MessageHeader * header));
 
 /**
- *
- * @param tipo
- * @return
+ * Creo un paquete un paquete vacion de un tipo dado al que luego le tengo que agregar datos
+ * @param tipo, tipo de mensaje al que pertenece el paquete
+ * @return el paquete creado
  */
 t_paquete* create_package(MessageType tipo);
 
 /**
- *
- * @param paquete
- * @param valor
- * @param tamanio
+ * Agrego un elemnto a un paquete dado
+ * @param paquete, paquete al que le voy a agregar datos
+ * @param valor, elemento que le voy a agregar al paquete
+ * @param tamanio, tamanio del elemento a enviar
  */
 void add_to_package(t_paquete* paquete, void* valor, int tamanio);
 
 /**
- *
- * @param paquete
- * @param socket_cliente
- * @return
+ * Envio un paquete a un socket dado
+ * @param paquete, paquete a enviar
+ * @param socket_cliente, socket al que le envio el paquete
+ * @return -1 en caso de error, cant de bytes en caso contrario
  */
 int send_package(t_paquete* paquete, int socket_cliente);
 
 /**
- *
- * @param paquete
- * @param bytes
- * @return
+ * Serializo un paquete a enviar, queda acomodado de tal manera que simplifica su recepcion(supuestamente), esta
+ * funcion solo se utiliza internamente, no se en que otro contexto se podria utilizar
+ * @param paquete, paquete a serializar
+ * @param bytes, cantidad de bytes del paquete a serializar
+ * @return retorna el paquete serializado
  */
 void* serialize_package(t_paquete* paquete, int bytes);
 
 /**
- *
+ * Funcion que libera la mempria reservada por un paquete, SIEMPRE se debe eliminar luego de utilizado ya que es memoria
+ * dinamica y genera leaks
  * @param paquete
  */
 void free_package(t_paquete* paquete);
 
 /**
- *
- * @param socket_cliente
- * @param header
- * @return
+ * Esta funcion recibe el contenido de un paquete y lo deserializa, luego agarra cada elemento y los agrega a una
+ * lista(t_list), cada elemento de la lista es un void*, por lo que hay que hacer los casteos correspondientes.
+ * Esta funcion esta divida en 2, la otra es receive_header, esto es asi ya que el servidor necesitaba solo el header
+ * de los paquetes para hacer ciertas verificaciones.
+ * @param socket_cliente, socket sobre el que recibe el paquete
+ * @param header, header recibido con la funcion receive_header
+ * @return retorna los elementos contenidos en el paquete recibido en una lista
  */
 t_list* receive_package(int socket_cliente, MessageHeader *header);
 
 /**
- *
- * @param params
- * @return
+ * Esta funcion es la que se ejecuta en cada hilo del servidor multihilos
+ * @param params, en esta bolsa de paramentros se incluye la ip y el puerto que iniciaron esta conexion, y las
+ * funciones para la perdida de conexion y cuando se recibe un mensaje nuevo
+ * @return nada, esta firma es asi ya que la biblioteca pthread la necesita
  */
 void* server_client(void* params);
 
 /**
- *
- * @param socket
- * @param new_connection
- * @param lost_connection
- * @param incoming_message
+ * Este es un servidor implementado de otra manera, con hilos en vez de utilizar un select, cada conexion abre un hilo
+ * nuevo, mantiene la misma interfaz que el anterior
+ * @param socket, socket del servidor
+ * @param new_connection, funcion que se ejecuta al recibir una nueva conexion
+ * @param lost_connection, funcion que se ejecuta al perder una conexion
+ * @param incoming_message, funcion que se ejecuta al recibir un mensaje nuevo
  * @return
  */
 int start_multithread_server(int socket, void (*new_connection)(int fd, char *ip, int port),
