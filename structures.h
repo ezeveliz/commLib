@@ -32,4 +32,15 @@ typedef struct {
 	void* stream;
 } t_paquete;
 
+/**
+ * Estrucutra utilizada en el servidor multihilos
+ */
+typedef struct t_thread_client {
+    int socket;
+    char * client_ip;
+    int connection_port;
+    void (*lost_connection)(int, char*, int);
+    void (*incoming_message)(int, char*, int, MessageHeader*);
+}t_thread_client;
+
 #endif

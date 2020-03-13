@@ -32,14 +32,6 @@
 
 int client_socket_array[MAX_CONN];
 
-typedef struct t_thread_client {
-	int socket;
-	char * client_ip;
-	int connection_port;
-	void (*lost_connection)(int, char*, int);
-	void (*incoming_message)(int, char*, int, MessageHeader*);
-}t_thread_client;
-
 /**
  * Creo un socket
  * @return -1 en caso de error, sino el socket en cuestion

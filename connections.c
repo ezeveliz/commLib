@@ -115,7 +115,6 @@ int start_multithread_server(int socket,
             getpeername(new_socket, (struct sockaddr *) &address, (socklen_t *) &addrlen);
 
             //Creo los parametros de la funcion que le voy a pasar al hilo
-            //TODO: ver donde esta esta estructura falopa
             t_thread_client *parametros_cliente = malloc(sizeof(t_thread_client));
 
             parametros_cliente->socket = new_socket;
