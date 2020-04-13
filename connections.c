@@ -81,7 +81,6 @@ void* server_client(void* _params){
 
     //Libero la memoria que pedi
     free(header);
-    free(params->client_ip);
     free(params);
 
 }
